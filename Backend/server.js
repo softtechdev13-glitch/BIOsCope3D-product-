@@ -3,22 +3,26 @@ const { sequelize } = require('./src/models');
 
 const PORT = process.env.PORT || 8080;
 
-// Lazy database connection for Vercel Serverless Function execution
+// Lazy non-blocking database connection for Vercel Serverless
 let isConnected = false;
 const connectDB = async () => {
   if (isConnected) return;
   try {
-    await sequelize.authenticate();
-    console.log('Database connected.');
+    const authPromise = sequelize.authenticate();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('DB Timeout')), 3000)
+    );
+    await Promise.race([authPromise, timeoutPromise]);
     isConnected = true;
+    console.log('Database connected.');
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('Database connection warning:', error.message);
   }
 };
 
-// Ensure DB connection on incoming requests
-app.use(async (req, res, next) => {
-  await connectDB();
+// Non-blocking DB connection check
+app.use((req, res, next) => {
+  connectDB().catch(() => {});
   next();
 });
 

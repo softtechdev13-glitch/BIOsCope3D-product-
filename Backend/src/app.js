@@ -19,7 +19,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to BioScope 3D API' });
+  res.json({ message: 'Welcome to BioScope 3D API', status: 'online' });
+});
+
+app.get('/api', (req, res) => {
+  res.json({ message: 'Welcome to BioScope 3D API', status: 'online' });
 });
 
 // Mount Routes
