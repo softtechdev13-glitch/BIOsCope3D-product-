@@ -15,7 +15,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  try { fs.mkdirSync(uploadsDir, { recursive: true }); } catch (e) {}
+}
+app.use('/uploads', express.static(uploadsDir));
 
 // Basic route
 app.get('/', (req, res) => {
