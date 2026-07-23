@@ -65,7 +65,6 @@ const ProgressScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.profileRow}>
-          <View style={styles.avatarPlaceholderSmall} />
           <Text style={styles.logoText}>BioScope 3D</Text>
         </View>
       </View>
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: scale(20),
     paddingTop: verticalScale(50),
@@ -198,18 +197,13 @@ const styles = StyleSheet.create({
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  avatarPlaceholderSmall: {
-    width: moderateScale(28),
-    height: moderateScale(28),
-    borderRadius: moderateScale(14),
-    backgroundColor: '#EAEFFF',
-    marginRight: scale(10),
+    justifyContent: 'center',
   },
   logoText: {
     fontSize: moderateScale(18),
     fontWeight: 'bold',
     color: colors.primaryDark,
+    textAlign: 'center',
   },
   notificationBtn: {
     padding: moderateScale(8),

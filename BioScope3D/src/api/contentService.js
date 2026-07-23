@@ -19,6 +19,15 @@ const contentService = {
     }
   },
 
+  getOrganById: async (organId) => {
+    try {
+      const response = await axiosClient.get(`/content/organs/${organId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
   getRecentLearning: async () => {
     try {
       const response = await axiosClient.get('/content/recent');

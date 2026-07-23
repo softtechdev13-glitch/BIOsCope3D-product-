@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { colors } from '../../theme/colors';
 import tutorService from '../../api/tutorService';
 
@@ -60,7 +61,11 @@ const AiTutorScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -72,11 +77,15 @@ const AiTutorScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
+      <KeyboardAwareScrollView 
         ref={scrollViewRef}
-        onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
+        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
         contentContainerStyle={styles.chatContent} 
         showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        extraScrollHeight={30}
+        keyboardShouldPersistTaps="handled"
+        style={{ flex: 1 }}
       >
         {messages.map(msg => {
           if (msg.sender === 'bot') {
@@ -114,13 +123,10 @@ const AiTutorScreen = ({ navigation }) => {
              <ActivityIndicator size="small" color={colors.primary} />
           </View>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Input Area */}
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.inputWrapper}
-      >
+      <View style={styles.inputWrapper}>
         <View style={styles.inputContainer}>
           <View style={styles.inputField}>
             <TextInput 
@@ -139,8 +145,8 @@ const AiTutorScreen = ({ navigation }) => {
             <Text style={styles.sendIcon}>➤</Text>
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -317,8 +323,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    paddingBottom: 110, // Extra padding for safe area and floating tab bar
+    paddingHorizontal: 15,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 95 : 85, // Fits floating bottom tab bar cleanly
   },
   inputField: {
     flex: 1,

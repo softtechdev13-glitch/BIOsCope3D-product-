@@ -31,6 +31,7 @@ const BookmarksScreen = ({ navigation }) => {
 
   const handleBookmarkPress = async (item) => {
     try {
+      setLoading(true);
       if (item.item_type === 'System') {
         const organs = await contentService.getSystemOrgans(item.item_id);
         const firstOrgan = organs && organs.length > 0 ? organs[0] : null;
@@ -40,13 +41,28 @@ const BookmarksScreen = ({ navigation }) => {
           navigation.navigate('Viewer3D', { systemId: item.item_id, systemName: item.title });
         }
       } else if (item.item_type === 'Organ') {
-        // Fetch organ details? For now, we can just navigate to Learn if we had full organ data,
-        // but we only have ID. Let's assume Organ bookmark needs full data, so we might need a specific endpoint.
-        // For now, try fetching systems, finding the organ, or just alert:
-        alert(`Navigating to ${item.title} (Organ view)`);
+        try {
+          const organ = await contentService.getOrganById(item.item_id);
+          if (organ) {
+            const systemName = organ.BodySystem?.name || 'Anatomy';
+            navigation.navigate('Learn', { organ, systemName });
+          } else {
+            navigation.navigate('Learn', {
+              organ: { id: item.item_id, name: item.title, key_facts: `Details for ${item.title}` },
+              systemName: 'Anatomy'
+            });
+          }
+        } catch (err) {
+          navigation.navigate('Learn', {
+            organ: { id: item.item_id, name: item.title, key_facts: `Details for ${item.title}` },
+            systemName: 'Anatomy'
+          });
+        }
       }
     } catch (error) {
       console.error('Error navigating to bookmark:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

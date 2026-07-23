@@ -37,9 +37,9 @@ const quizService = {
     }
   },
 
-  submitProgress: async (quizId, score) => {
+  submitProgress: async (quizId, score, maxScore = 10) => {
     try {
-      const response = await axiosClient.post('/quizzes/progress', { quiz_id: quizId, score });
+      const response = await axiosClient.post('/quizzes/progress', { quiz_id: quizId, score, max_score: maxScore });
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

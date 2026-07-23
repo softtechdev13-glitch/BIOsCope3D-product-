@@ -56,17 +56,19 @@ const Viewer3DScreen = ({ navigation, route }) => {
   useEffect(() => {
     const checkBookmark = async () => {
       try {
+        if (!systemId) return;
         const bookmarks = await bookmarkService.getUserBookmarks();
-        const exists = bookmarks.find(b => b.item_type === 'System' && b.item_id === systemId);
+        const exists = bookmarks.find(b => b.item_type === 'System' && String(b.item_id) === String(systemId));
         setIsBookmarked(!!exists);
       } catch (error) {
         console.error('Error checking bookmark:', error);
       }
     };
-    if (systemId) checkBookmark();
+    checkBookmark();
   }, [systemId]);
 
   const toggleBookmark = async () => {
+    if (!systemId) return;
     try {
       if (isBookmarked) {
         await bookmarkService.removeBookmark('System', systemId);
@@ -76,7 +78,9 @@ const Viewer3DScreen = ({ navigation, route }) => {
         setIsBookmarked(true);
       }
     } catch (error) {
-      alert('Error updating bookmark');
+      console.error('Error updating bookmark:', error);
+      const msg = error.message || error.error || 'Server error';
+      alert(`Error updating bookmark: ${msg}`);
     }
   };
 

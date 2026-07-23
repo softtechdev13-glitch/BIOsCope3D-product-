@@ -64,7 +64,8 @@ const QuizQuestionScreen = ({ navigation, route }) => {
 
   const submitQuiz = async (finalScore) => {
     try {
-      await quizService.submitProgress(quiz.id, finalScore);
+      const totalCount = quiz?.questions?.length || 10;
+      await quizService.submitProgress(quiz.id, finalScore, totalCount);
     } catch (err) {
       console.error('Error submitting progress:', err);
     }

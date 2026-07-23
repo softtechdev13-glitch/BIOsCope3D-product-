@@ -23,7 +23,7 @@ const Bookmark = sequelize.define('Bookmark', {
     }
   },
   item_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     allowNull: false,
   },
   title: {

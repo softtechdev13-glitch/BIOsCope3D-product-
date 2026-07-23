@@ -1,12 +1,35 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Modal, Image, ActivityIndicator } from 'react-native';
 import { colors } from '../../theme/colors';
+import userService from '../../api/userService';
+import { AuthContext } from '../../context/AuthContext';
+import { API_CONFIG } from '../../config/apiConfig';
+import { moderateScale, scale, verticalScale } from '../../utils/responsive';
 
 const SettingsScreen = ({ navigation }) => {
+  const { logout } = useContext(AuthContext);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [aboutModalVisible, setAboutModalVisible] = useState(false);
+
   const [darkMode, setDarkMode] = useState(false);
   const [dailyReminders, setDailyReminders] = useState(true);
   const [quizResults, setQuizResults] = useState(true);
   const [achievementAlerts, setAchievementAlerts] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await userService.getProfile();
+        setProfile(data);
+      } catch (error) {
+        console.error('Error loading profile in SettingsScreen:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -22,14 +45,29 @@ const SettingsScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
         {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar} />
+        <TouchableOpacity style={styles.profileCard} onPress={() => navigation?.goBack()}>
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 15 }} />
+          ) : profile?.profile_image ? (
+            <Image 
+              source={{ uri: `${API_CONFIG.BASE_URL.replace('/api', '')}${profile.profile_image}` }} 
+              style={styles.avatarImage} 
+            />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitial}>
+                {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'U'}
+              </Text>
+            </View>
+          )}
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Dr. Julian Vance</Text>
-            <Text style={styles.profileDesc}>Medical Resident • Level 12</Text>
+            <Text style={styles.profileName}>{profile?.full_name || 'Medical Student'}</Text>
+            <Text style={styles.profileDesc}>
+              {profile?.email || 'User'} • Level {profile?.level || 1}
+            </Text>
           </View>
           <Text style={styles.chevron}>›</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Appearance Section */}
         <Text style={styles.sectionTitle}>APPEARANCE</Text>
@@ -119,7 +157,7 @@ const SettingsScreen = ({ navigation }) => {
             <Text style={styles.settingText}>Privacy Policy</Text>
             <Text style={styles.chevron}>›</Text>
           </View>
-          <View style={styles.settingRow}>
+          <TouchableOpacity style={styles.settingRow} onPress={() => setAboutModalVisible(true)}>
             <View style={[styles.settingIconContainer, { backgroundColor: '#EAEFFF' }]}>
               <Text style={[styles.settingIcon, { color: colors.primary }]}>ℹ️</Text>
             </View>
@@ -128,7 +166,7 @@ const SettingsScreen = ({ navigation }) => {
               <Text style={styles.settingValueText}>v2.4.1</Text>
               <Text style={styles.chevron}>›</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Data Sync Status */}
@@ -138,14 +176,73 @@ const SettingsScreen = ({ navigation }) => {
         </View>
 
         {/* Log Out Button */}
-        <TouchableOpacity style={styles.logoutBtn}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
           <Text style={styles.logoutIcon}>🚪</Text>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>Logged in as julian.vance@medical.edu</Text>
+        <Text style={styles.footerText}>
+          Logged in as {profile?.email || 'medical student'}
+        </Text>
 
       </ScrollView>
+
+      {/* About BioScope 3D Popup Modal */}
+      <Modal
+        visible={aboutModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setAboutModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.appIconBadge}>
+                <Text style={{ fontSize: 24 }}>🧬</Text>
+              </View>
+              <Text style={styles.modalTitle}>BioScope 3D</Text>
+              <Text style={styles.versionBadge}>Version 2.4.1</Text>
+            </View>
+
+            <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.aboutSectionHeading}>ABOUT THE APP</Text>
+              <Text style={styles.aboutDescription}>
+                BioScope 3D is a state-of-the-art interactive 3D human anatomy visualization and learning platform built for medical students, healthcare practitioners, and biology enthusiasts.
+              </Text>
+
+              <Text style={styles.aboutSectionHeading}>KEY FEATURES</Text>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureBullet}>🦴</Text>
+                <Text style={styles.featureDetail}>Interactive 3D System & Organ Atlas</Text>
+              </View>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureBullet}>👩‍🏫</Text>
+                <Text style={styles.featureDetail}>AI Anatomy Tutor with Clinical Insights</Text>
+              </View>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureBullet}>🏆</Text>
+                <Text style={styles.featureDetail}>Adaptive Quizzes, XP Levels & Certificates</Text>
+              </View>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureBullet}>🔖</Text>
+                <Text style={styles.featureDetail}>Custom Bookmarks & Recent Progress Sync</Text>
+              </View>
+
+              <Text style={styles.aboutSectionHeading}>SYSTEM INFO</Text>
+              <Text style={styles.infoText}>Backend Engine: Express & PostgreSQL Cloud</Text>
+              <Text style={styles.infoText}>3D Engine: Sketchfab WebGL Renderer</Text>
+              <Text style={styles.copyrightText}>© 2026 BioScope 3D Inc. All rights reserved.</Text>
+            </ScrollView>
+
+            <TouchableOpacity 
+              style={styles.closeModalBtn} 
+              onPress={() => setAboutModalVisible(false)}
+            >
+              <Text style={styles.closeModalBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -198,12 +295,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  avatar: {
+  avatarImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#EAEFFF',
     marginRight: 15,
+  },
+  avatarPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  avatarInitial: {
+    color: colors.white,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   profileInfo: {
     flex: 1,
@@ -306,7 +416,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#FFD1D9', // Light red border
+    borderColor: '#FFD1D9',
   },
   logoutIcon: {
     fontSize: 18,
@@ -315,13 +425,109 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#D32F2F', // Red text
+    color: '#D32F2F',
   },
   footerText: {
     fontSize: 10,
     color: colors.textLight,
     textAlign: 'center',
     marginTop: 10,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  appIconBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#EAEFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primaryDark,
+  },
+  versionBadge: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  aboutSectionHeading: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: colors.textLight,
+    letterSpacing: 1,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  aboutDescription: {
+    fontSize: 13,
+    color: colors.textDark,
+    lineHeight: 20,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  featureBullet: {
+    fontSize: 14,
+    marginRight: 8,
+  },
+  featureDetail: {
+    fontSize: 13,
+    color: colors.textDark,
+  },
+  infoText: {
+    fontSize: 12,
+    color: colors.textLight,
+    marginBottom: 2,
+  },
+  copyrightText: {
+    fontSize: 11,
+    color: colors.textLight,
+    marginTop: 10,
+    fontStyle: 'italic',
+  },
+  closeModalBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  closeModalBtnText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 

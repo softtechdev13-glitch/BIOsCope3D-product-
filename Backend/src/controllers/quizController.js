@@ -52,7 +52,7 @@ const getQuizById = async (req, res) => {
 // @access  Private
 const submitProgress = async (req, res) => {
   try {
-    const { quiz_id, score } = req.body;
+    const { quiz_id, score, max_score } = req.body;
     const userId = req.user.id;
 
     if (!quiz_id || score === undefined) {
@@ -71,28 +71,30 @@ const submitProgress = async (req, res) => {
       score: score,
     });
 
-    // Update user stats (XP and potentially level/streak logic can be expanded)
+    // Update user stats
     const user = await User.findByPk(userId);
-    user.xp += quiz.xp_reward;
-    user.streak += 1; // Simplified streak logic
-    
-    // Simple leveling logic (every 500 XP = 1 level)
-    user.level = Math.floor(user.xp / 500) + 1;
-    
-    await user.save();
+    if (user) {
+      user.xp += (quiz.xp_reward || 100);
+      user.streak += 1;
+      user.level = Math.floor(user.xp / 500) + 1;
+      await user.save();
 
-    // Send result email
-    const { sendQuizResultEmail } = require('../services/emailService');
-    await sendQuizResultEmail(user.email, user.full_name, quiz.title, score, 20); // assuming max 20
+      // Send result email in background so user doesn't wait
+      const totalMaxScore = max_score || 10;
+      const { sendQuizResultEmail } = require('../services/emailService');
+      sendQuizResultEmail(user.email, user.full_name || 'Student', quiz.title, score, totalMaxScore).catch(err => {
+        console.error('Quiz email notification error:', err);
+      });
+    }
 
     res.status(201).json({
-      message: 'Progress saved successfully',
-      new_xp: user.xp,
-      new_level: user.level,
-      new_streak: user.streak
+      message: 'Progress saved and result email dispatched successfully',
+      new_xp: user?.xp || 0,
+      new_level: user?.level || 1,
+      new_streak: user?.streak || 0
     });
   } catch (error) {
-    console.error(error);
+    console.error('Submit progress error:', error);
     res.status(500).json({ message: 'Server error saving progress' });
   }
 };
