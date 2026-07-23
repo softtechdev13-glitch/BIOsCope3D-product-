@@ -7,9 +7,10 @@
 // 4. Replace 192.168.1.100 below with that address
 
 export const API_CONFIG = {
-  // Use your computer's local IP address for physical device testing
-  BASE_URL: 'http://192.168.1.41:8080/api', 
+  // Live Vercel Production Backend URL
+  BASE_URL: 'https://bi-os-copo3-d-product.vercel.app/api', 
   
-  // Keep this commented out unless using Android Emulator
+  // Local fallback URLs for offline testing
+  // BASE_URL: 'http://192.168.1.41:8080/api', 
   // BASE_URL: 'http://10.0.2.2:8080/api', 
 };
