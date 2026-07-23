@@ -5,8 +5,10 @@ const { Sequelize } = require('sequelize');
 
 let sequelize;
 
-if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
+const dbUrl = process.env.DATABASE_URL;
+
+if (dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'))) {
+  sequelize = new Sequelize(dbUrl, {
     dialect: 'postgres',
     dialectModule: pg,
     logging: false,
