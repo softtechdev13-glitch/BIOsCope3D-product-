@@ -1,3 +1,5 @@
+require('pg');
+require('pg-hstore');
 const app = require('../Backend/src/app');
 const { sequelize } = require('../Backend/src/models');
 
