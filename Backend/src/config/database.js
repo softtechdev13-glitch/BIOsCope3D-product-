@@ -8,17 +8,39 @@ let sequelize;
 const dbUrl = process.env.DATABASE_URL;
 
 if (dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'))) {
-  sequelize = new Sequelize(dbUrl, {
-    dialect: 'postgres',
-    dialectModule: pg,
-    logging: false,
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
+  try {
+    const parsedUrl = new URL(dbUrl);
+    sequelize = new Sequelize(
+      parsedUrl.pathname.split('/')[1] || 'postgres',
+      parsedUrl.username ? decodeURIComponent(parsedUrl.username) : 'postgres',
+      parsedUrl.password ? decodeURIComponent(parsedUrl.password) : '',
+      {
+        host: parsedUrl.hostname,
+        port: parsedUrl.port ? parseInt(parsedUrl.port, 10) : 5432,
+        dialect: 'postgres',
+        dialectModule: pg,
+        logging: false,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        }
       }
-    }
-  });
+    );
+  } catch (err) {
+    sequelize = new Sequelize(dbUrl, {
+      dialect: 'postgres',
+      dialectModule: pg,
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      }
+    });
+  }
 } else {
   sequelize = new Sequelize(
     process.env.DB_NAME || 'bioscope3d',

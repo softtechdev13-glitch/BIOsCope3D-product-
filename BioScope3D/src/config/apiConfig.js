@@ -8,7 +8,7 @@
 
 export const API_CONFIG = {
   // Live Vercel Production Backend URL
-  BASE_URL: 'https://bi-os-copo3-d-product.vercel.app/api', 
+  BASE_URL: 'https://bi-os-cope3-d-product.vercel.app/api', 
   
   // Local fallback URLs for offline testing
   // BASE_URL: 'http://192.168.1.41:8080/api', 

@@ -20,9 +20,13 @@ const connectDB = async () => {
   }
 };
 
-// Non-blocking DB connection check
-app.use((req, res, next) => {
-  connectDB().catch(() => {});
+// Blocking DB connection check for Serverless environments
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error("DB Connection Error in Middleware:", err);
+  }
   next();
 });
 
